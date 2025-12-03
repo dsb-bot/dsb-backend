@@ -1,2 +1,2 @@
 # Ignoriere den Ordner server-build/dsb-database und alles darin
-server-build/dsb-database/*
+server-build/dsb-database/

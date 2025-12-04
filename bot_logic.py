@@ -70,24 +70,17 @@ class SubstitutionBot:
 
             date_str_to_parse = None
             if mon_title_div:
-                # Textinhalt des div (z.B. "5.12.2025 Freitag, Woche B" oder "05.12.2025 Freitag, Woche B")
                 full_title_text = mon_title_div.text.strip()
-
+                # Regex erlaubt 1 oder 2 Ziffern für Tag und Monat
                 match = re.search(r"(\d{1,2}\.\d{1,2}\.\d{4})", full_title_text)
 
                 if match:
-                    date_str_to_parse = match.group(
-                        1
-                    )  # z.B. "5.12.2025" oder "05.12.2025"
+                    date_str_to_parse = match.group(1)
 
             if date_str_to_parse:
-                # Datumsobjekt erstellen. %d und %m verarbeiten automatisch 1- oder 2-stellige Eingaben.
-                # (z.B. strptime('5.12.2025', '%d.%m.%Y') funktioniert)
                 dt_obj = datetime.strptime(date_str_to_parse, "%d.%m.%Y")
-                # Format für Dateinamen: YYYY-MM-DD
                 date_str = dt_obj.strftime("%Y-%m-%d")
             else:
-                # Fallback, falls kein Datum gefunden wurde
                 logger.warning(
                     f"Konnte Datum nicht aus HTML für URL {url} extrahieren. Nutze aktuelles Datum."
                 )
@@ -99,9 +92,7 @@ class SubstitutionBot:
             # 2. HTML-Inhalt speichern
             with open(full_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
-            logger.info(
-                f"Plan gespeichert (Schüler/Heute-Morgen) mit Datum aus HTML: {full_path}"
-            )
+            logger.info(f"Plan gespeichert ({title}): {full_path}")
             return True
         except Exception as e:
             logger.error(f"Konnte HTML nicht speichern für {url}: {e}", exc_info=True)

@@ -179,13 +179,14 @@ class SubstitutionBot:
                             if self._save_content_by_date(html_content, new_title, unique_key):
                                 # 5. Zum Zustand hinzufügen und auf Update prüfen
                                 new_plan_data = {
-                                    "detail": unique_key, # Verwende den Schlüssel als 'detail'
+                                    "detail": unique_key, # Interner Schlüssel für das Tracking
                                     "title": new_title,
-                                    "date": datetime.now().isoformat(), # Nutze aktuelle Zeit als Zeitstempel
+                                    "date": datetime.now().isoformat(), 
+                                    "original_url": url, # NEU: Füge die Lehrer-URL hinzu, die für Discord verwendet werden soll
                                 }
                                 current_plans[unique_key] = new_plan_data
                                 new_keys.add(unique_key)
-                                logger.info(f"Konvertierungsziel als Neu/Update markiert: {new_title} (Key: {unique_key})")
+                                logger.info(f"Konvertierungsziel als Neu/Update markiert: {new_title} (Key: {unique_key}, Original-URL für Discord: {url})")
                             else:
                                 logger.error(f"Speichern des konvertierten Plans {new_title} fehlgeschlagen.")
                         # Wenn er nicht neu ist, wird er ignoriert, da wir keine bessere Verfolgung haben.

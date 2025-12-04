@@ -35,14 +35,16 @@ class DiscordNotifier:
 
         fields = []
         for key in plans:
-            title = plans[key]['title']
+            plan_data = plans[key]
+            title = plan_data['title']
+            link_target = plan_data.get('original_url', plan_data['detail'])
+
             if key in new_keys:
                 title += " 🌟 (neu)"
             
             fields.append({
                 "name": title,
-                # KORREKTUR: Nutze 'detail' statt 'url' für den Link, um die neue Datenstruktur zu unterstützen
-                "value": f"[Vertretungsplan öffnen]({plans[key]['detail']})",
+                "value": f"[Vertretungsplan öffnen]({link_target})", # Angepasst, um link_target zu verwenden
                 "inline": False
             })
 
@@ -52,7 +54,7 @@ class DiscordNotifier:
         # Füge den Rollen-Ping zur Hauptnachricht (content) hinzu, wenn neue Pläne gefunden wurden
         content_message = ""
         if new_keys and self.ping_role_id:
-             # Discord erwartet die Rolle im Format <@&ID>
+            # Discord erwartet die Rolle im Format <@&ID>
             content_message = f"🚨 NEUE VERTRETUNGSPLÄNE! <@&{self.ping_role_id}>"
 
         data = {

@@ -13,6 +13,14 @@ class DSBClient:
         self.data_url = "https://app.dsbcontrol.de/JsonHandler.ashx/GetData"
 
     def fetch_menu_links(self):
+        """
+        Ruft die Menüstruktur vom DSB-Server ab, dekodiert sie und extrahiert 
+        alle Links zu Vertretungsplänen (.htm/.html), zusammen mit den Metadaten 
+        (Datum und Titel) des übergeordneten Plan-Eintrags.
+
+        Gibt eine Liste von Dictionaries zurück: 
+        [{'detail': 'https://...', 'date': '...', 'title': '...'}, ...]
+        """
         current_time = dt.datetime.now().isoformat()[:-3] + "Z"
         
         params = {
@@ -22,7 +30,7 @@ class DSBClient:
             "Language": "de",
             "OsVersion": "28 8.0",
             "AppId": str(uuid.uuid4()),
-            "Device": "SM-G930F",
+            "Device": "SM-G30F",
             "BundleId": "de.heinekingmedia.dsbmobile",
             "Date": current_time,
             "LastUpdate": current_time
@@ -31,6 +39,7 @@ class DSBClient:
         try:
             # --- ANFRAGE VORBEREITEN ---
             params_bytes = json.dumps(params, separators=(',', ':')).encode("UTF-8")
+            # Daten komprimieren und Base64-kodieren
             params_compressed = base64.b64encode(gzip.compress(params_bytes)).decode("UTF-8")
             json_req = {"req": {"Data": params_compressed, "DataType": 1}}
             
@@ -46,6 +55,7 @@ class DSBClient:
             logger.debug(f"DSB Response Content (raw JSON): {resp_content}")
 
             resp_compressed = json.loads(r.content)["d"]
+            # Daten Base64-dekodieren und dekomprimieren
             data = json.loads(gzip.decompress(base64.b64decode(resp_compressed)))
             
             logger.debug(f"DSB Response Content (decrypted JSON): {json.dumps(data, indent=2)}") 
@@ -55,8 +65,8 @@ class DSBClient:
                 logger.error(f"DSB API Error (Resultcode {data.get('Resultcode')}): {data.get('ResultStatusInfo')}")
                 return []
 
-            # --- ZIELGERICHTETES EXTRAHIEREN DER LINKS ---
-            links = []
+            # --- ZIELGERICHTETES EXTRAHIEREN DER LINKS MIT METADATEN ---
+            links_with_metadata = []
             
             # 1. Das Element mit Title: "Inhalte" finden
             inhalte_item = next(
@@ -69,6 +79,7 @@ class DSBClient:
                 return []
                 
             # 2. Das Element mit Title: "Pläne" (Pl\u00e4ne) in den Childs von "Inhalte" finden
+            # (Beachten Sie, dass "Pläne" in JSON als "Pl\u00e4ne" kodiert sein kann)
             plaene_item = next(
                 (child for child in inhalte_item.get("Childs", []) if child.get("Title") == "Pläne"),
                 None
@@ -78,45 +89,40 @@ class DSBClient:
                 logger.warning("DSB Child Item 'Pläne' nicht gefunden.")
                 return []
 
-            # 3. Die Childs im Root-Objekt von "Pläne" durchgehen
+            # 3. Die Childs (die einzelnen Plan-Einträge) im Root-Objekt von "Pläne" durchgehen
             root_childs = plaene_item.get("Root", {}).get("Childs", [])
             
             for child in root_childs:
-                # Fall 1: Der Link ist direkt in den Child-Elementen verschachtelt (wie in Ihrem ersten Beispiel)
-                # D.h., das Child-Element hat eine Liste von 'Childs', die die Detail-Links enthalten.
-                if isinstance(child.get("Childs"), list) and child["Childs"]:
-                    for sub in child["Childs"]:
-                        # Es wird der 'Detail'-Wert des innersten Elements verwendet
-                        if sub.get("Detail"):
-                            links.append(sub["Detail"])
+                # Metadaten des Plan-Eintrags (Parent)
+                parent_date = child.get("Date")
+                parent_title = child.get("Title")
                 
-                # Fall 2: Der Link ist direkt im Detail-Feld des Root-Childs enthalten
-                # (Auch wenn in Ihren Beispielen nicht der Fall, ist die ursprüngliche Logik hier sicherer,
-                # aber die Anforderung war, nur die verschachtelten zu nehmen.
-                # Wir halten uns an die Struktur Ihrer Beispieldaten, wo die Links *immer* # im Sub-Child sind, oder an die generische Struktur eines Listeneintrags.)
-                
-                # Um nur die *Vertretungsplan*-Links zu erwischen, bleiben wir bei der tieferen Schachtelung, 
-                # da Ihre Beispiele zeigen, dass der eigentliche Link tief im 'Childs'-Array steckt,
-                # obwohl der Originalcode hier etwas generischer war.
-                
-                # Wir nehmen nur Links, die wir in den inneren Childs finden, da dies in beiden 
-                # Beispielen die gewünschten 'subst_001.htm' Links liefert.
+                # Der eigentliche Link ist im verschachtelten Child-Element enthalten
+                nested_childs = child.get("Childs")
+
+                if isinstance(nested_childs, list) and nested_childs:
+                    # Basierend auf den JSON-Beispielen ist der Detail-Link im ersten inneren Child
+                    link_object = nested_childs[0]
+                    detail_link = link_object.get("Detail")
+
+                    # Filter: Stellt sicher, dass es ein gültiger Vertretungsplan-Link ist
+                    is_valid_plan = detail_link and \
+                                    (detail_link.endswith(".htm") or detail_link.endswith(".html"))
+                    
+                    if is_valid_plan:
+                         links_with_metadata.append({
+                             "detail": detail_link,
+                             "date": parent_date,
+                             "title": parent_title
+                         })
 
             
-            # Der ursprüngliche Code enthielt eine zusätzliche Logik, die sich auf den
-            # `Root`-Knoten von `ResultMenuItems` bezog, was nicht in Ihren Beispielen ist,
-            # aber die Extraktion der Links aus den **inneren Childs** von **"Pläne"** ist nun 
-            # durch die oben implementierte, gezieltere Navigation abgedeckt und berücksichtigt 
-            # beide Ihrer JSON-Strukturen, da sie beide demselben Pfad folgen:
-            # ResultMenuItems[Title="Inhalte"] -> Childs[Title="Pläne"] -> Root -> Childs[] -> Childs[] -> "Detail"
+            logger.info(f"DSB Links gefunden: {len(links_with_metadata)} gefilterte Vertretungspläne.")
+            logger.debug(f"DSB Gefundene Links (mit Metadaten): {links_with_metadata}")
             
-            
-            logger.info(f"DSB Links gefunden: {len(links)} Vertretungspläne.")
-            logger.debug(f"DSB Gefundene Links: {links}")
-            
-            # Filtert nur die HTML-Pläne heraus (wie im Originalcode)
-            return [l for l in links if l.endswith(".htm") or l.endswith(".html")]
+            return links_with_metadata
 
         except Exception as e:
+            # Fängt Netzwerkfehler oder Dekomprimierungs-/JSON-Fehler ab
             logger.error(f"DSB Abruf fehlgeschlagen: {e}", exc_info=True)
             return []

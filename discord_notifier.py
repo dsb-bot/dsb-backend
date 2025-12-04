@@ -41,16 +41,24 @@ class DiscordNotifier:
             
             fields.append({
                 "name": title,
-                "value": f"[Vertretungsplan öffnen]({plans[key]['url']})",
+                # KORREKTUR: Nutze 'detail' statt 'url' für den Link, um die neue Datenstruktur zu unterstützen
+                "value": f"[Vertretungsplan öffnen]({plans[key]['detail']})",
                 "inline": False
             })
 
         temp = get_cpu_temperature()
         temp_str = f"{temp:.1f}°C" if temp else "?"
+        
+        # Füge den Rollen-Ping zur Hauptnachricht (content) hinzu, wenn neue Pläne gefunden wurden
+        content_message = ""
+        if new_keys and self.ping_role_id:
+             # Discord erwartet die Rolle im Format <@&ID>
+            content_message = f"🚨 NEUE VERTRETUNGSPLÄNE! <@&{self.ping_role_id}>"
 
         data = {
             "username": "DSB-Bot",
             "avatar_url": "https://www.dsbmobile.de/img/logo_dsbmobile.png",
+            "content": content_message, # Enthält den Ping, falls neue Pläne da sind
             "embeds": [{
                 "title": "Aktuelle Vertretungspläne",
                 "color": 0x1abc9c,

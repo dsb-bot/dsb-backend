@@ -1,7 +1,7 @@
 import os
 import logging
-import datetime # NEU: Für den Zeitstempel
-from logging.handlers import RotatingFileHandler # Wird nicht mehr genutzt, aber ggf. gut zu wissen
+import datetime
+from logging.handlers import RotatingFileHandler
 from config import Config
 
 logger = logging.getLogger('DSBBot')
@@ -41,10 +41,19 @@ def setup_logging():
 
 def get_cpu_temperature():
     """Liest die CPU-Temperatur des Raspberry Pi aus."""
-    # ... (Logik bleibt gleich)
     try:
         res = os.popen("vcgencmd measure_temp").readline()
         temp = float(res.replace("temp=", "").replace("'C\n", ""))
         return temp
     except Exception:
         return None
+
+def ConvertTeacherToStudent(teacher_html: str) -> list[str]:
+    """Dummy-Funktion zur Konvertierung eines Lehrerplans (HTML-String) in eine Liste von Schülerplänen (HTML-Strings).
+    
+    Diese Dummy-Implementierung gibt den übergebenen String einfach als Liste zurück,
+    damit die Bot-Logik getestet werden kann. In der finalen Version muss hier 
+    die Logik zur Filterung und Aufteilung des Lehrerplans implementiert werden.
+    """
+    # Gibt den kompletten HTML-String als einziges Element in einer Liste zurück.
+    return [teacher_html]

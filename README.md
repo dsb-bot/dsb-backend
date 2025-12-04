@@ -66,7 +66,7 @@ TEMP_THRESHOLD=70
 ## ▶️ Starten
 
 ```
-python start_server.py
+python main.py
 ```
 
 Beim ersten Start passiert automatisch:
@@ -81,13 +81,19 @@ Beim ersten Start passiert automatisch:
 
 ```
 .
-├── start_server.py
-├── server-build/
-│   └── build_bot.py
-├── .env
-├── requirements.txt
-└── dsb-database/       # automatisch erstellt
-    └── plans/
+├── .env                  # Deine Konfiguration (NICHT teilen!)
+├── main.py               # Start-Skript
+├── config.py             # Lädt Einstellungen
+├── bot_logic.py          # Hauptablauf
+├── dsb_client.py         # Verbindung zu DSB
+├── git_manager.py        # Git Clone/Push Logik
+├── discord_notifier.py   # Senden von Nachrichten
+├── utils.py              # Hilfstools (Temp Check)
+├── requirements.txt      # Python Pakete
+│
+└── dsb-database/         # <--- Dieses Verzeichnis wird automatisch erstellt/geclont!
+    ├── .git/             # Git Metadaten
+    └── plans/            # Hier landen die HTML-Dateien
         ├── 2023-10-01.html
         └── 2023-10-02.html
 ```

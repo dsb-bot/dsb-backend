@@ -6,6 +6,10 @@ load_dotenv()
 class Config:
     DSB_USER = os.getenv("DSB_USER")
     DSB_PASS = os.getenv("DSB_PASS")
+    
+    DSB_TEACHER_USER = os.getenv("DSB_TEACHER_USER")
+    DSB_TEACHER_PASS = os.getenv("DSB_TEACHER_PASS")
+    
     GIT_USER = os.getenv("GIT_USER")
     GIT_TOKEN = os.getenv("GIT_TOKEN")
     GIT_REPO = os.getenv("GIT_REPO")
@@ -29,7 +33,11 @@ class Config:
 
     @staticmethod
     def validate():
-        required = ["DSB_USER", "DSB_PASS", "GIT_USER", "GIT_TOKEN", "GIT_REPO"]
+        required = [
+            "DSB_USER", "DSB_PASS", 
+            "DSB_TEACHER_USER", "DSB_TEACHER_PASS", # NEU
+            "GIT_USER", "GIT_TOKEN", "GIT_REPO"
+        ]
         missing = [key for key in required if not os.getenv(key)]
         if missing:
             raise EnvironmentError(f"Fehlende Variablen in .env: {', '.join(missing)}")

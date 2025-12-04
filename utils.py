@@ -30,9 +30,9 @@ def setup_logging():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    # GEÄNDERT: Standard File Handler für neue Datei pro Start
+    # Standard File Handler für neue Datei pro Start
     fh = logging.FileHandler(log_filename, encoding='utf-8')
-    fh.setLevel(logging.DEBUG) 
+    fh.setLevel(logging.INFO) 
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 

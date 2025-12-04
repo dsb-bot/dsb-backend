@@ -1,67 +1,112 @@
 # DSB Vertretungsplan Bot
 
-Ein automatisierter Bot, der Vertretungspläne von [DSBMobile](https://www.dsbmobile.de) abruft, speichert, auf GitHub pusht und über Discord benachrichtigt. Zusätzlich überwacht er die CPU-Temperatur eines Raspberry Pi und sendet Warnungen bei Überhitzung.
+Automatischer Vertretungsplan-Bot für **DSB Mobile**, inkl. **Git-Archivierung**, **Discord-Benachrichtigungen** und **Temperaturüberwachung** (für Raspberry Pi).
 
 ---
 
-## Funktionen
+## ✨ Features
 
-* Automatisches Abrufen der aktuellen Vertretungspläne von DSBMobile
-* Speichern der Pläne lokal
-* Benachrichtigungen über neue Pläne auf Discord
-* Automatischer GitHub-Push der Änderungen
-* Überwachung der Raspberry Pi CPU-Temperatur mit Discord-Warnungen
+* **Automatischer DSB-Abruf** (neue oder geänderte Pläne)
+* **Git-Auto-Sync**
 
----
+  * Klont Repository automatisch beim ersten Start
+  * Hält es aktuell (`git pull`)
+  * Pusht neue HTML-Pläne automatisch
+* **Discord-Benachrichtigungen**
 
-## Voraussetzungen
+  * Warnungen (Fehler, Temperatur)
+  * Meldung neuer Pläne
+* **Hardware-Monitoring**
 
-* Python 3.10+
-* Bibliotheken: `requests`, `beautifulsoup4`
-* Git installiert
-* Discord-Webhooks
-* GitHub-Repository
-
----
-
-## Installation
-
-1. Repository klonen:
-
-   ```bash
-   git clone <repository-url>
-   cd <repository-folder>
-   ```
-
-2. Abhängigkeiten installieren:
-
-   ```bash
-   pip install requests beautifulsoup4
-   ```
+  * Temperaturwarnung (konfigurierbar)
+* **Saubere Modulstruktur**
 
 ---
 
-## Konfiguration
+## 📦 Installation
 
-Der Bot benötigt folgende Parameter:
+### 1. Repository herunterladen
 
-| Parameter               | Beschreibung                              |
-| ----------------------- | ----------------------------------------- |
-| `DSB_USER`              | Benutzername für DSBMobile                |
-| `DSB_PASS`              | Passwort für DSBMobile                    |
-| `GIT_USER`              | GitHub-Benutzername                       |
-| `GIT_TOKEN`             | GitHub-Personal Access Token              |
-| `GIT_REPO`              | GitHub-Repository-Name                    |
-| `DISCORD_WEBHOOK_WARN`  | Discord-Webhook für Temperaturwarnungen   |
-| `DISCORD_WEBHOOK_PLANS` | Discord-Webhook für neue Vertretungspläne |
+Lege den Bot in ein beliebiges Verzeichnis, z. B.:
 
----
-
-## Starten des Bots
-
-```bash
-python start_server.py <DSB_USER> <DSB_PASS> <GIT_USER> <GIT_TOKEN> <GIT_REPO> <DISCORD_WEBHOOK_WARN> <DISCORD_WEBHOOK_PLANS>
+```
+/home/pi/dsb-bot
 ```
 
-* Der Bot überwacht die CPU-Temperatur, ruft neue Vertretungspläne ab, speichert sie lokal, sendet Discord-Benachrichtigungen und pusht Änderungen automatisch zu GitHub.
-* Neue Pläne werden automatisch erkannt und hervorgehoben.
+### 2. Abhängigkeiten installieren
+
+```
+pip install -r requirements.txt
+```
+
+### 3. `.env` Datei erstellen
+
+**Nicht teilen!** Enthält Passwörter.
+
+```
+# --- DSB Zugangsdaten ---
+DSB_USER=dein_login
+DSB_PASS=dein_passwort
+
+# --- GitHub ---
+GIT_USER=DeinGitHubName
+GIT_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxx
+GIT_REPO=mein-plan-archiv
+
+# --- Discord Webhooks ---
+DISCORD_WEBHOOK_WARN=https://discord.com/api/webhooks/...warn
+DISCORD_WEBHOOK_PLANS=https://discord.com/api/webhooks/...plans
+
+# --- Einstellungen ---
+TEMP_THRESHOLD=70
+```
+
+---
+
+## ▶️ Starten
+
+```
+python start_server.py
+```
+
+Beim ersten Start passiert automatisch:
+
+* Repository `GIT_REPO` wird **geklont**, falls nicht vorhanden
+* ansonsten wird ein **git pull** durchgeführt
+* danach startet der Plan-Check-Loop & Temperaturmonitor
+
+---
+
+## 📂 Ordnerstruktur
+
+```
+.
+├── start_server.py
+├── server-build/
+│   └── build_bot.py
+├── .env
+├── requirements.txt
+└── dsb-database/       # automatisch erstellt
+    └── plans/
+        ├── 2023-10-01.html
+        └── 2023-10-02.html
+```
+
+---
+
+## ❗ Troubleshooting
+
+* **Git Authentication failed**
+  → Stelle sicher, dass der Token **repo-Rechte** hat.
+
+* **Temperatur wird nicht angezeigt**
+  → funktioniert nur auf Raspberry Pi.
+
+* **Git-Konflikte**
+  → Ordner `dsb-database` löschen → Bot neu starten.
+
+---
+
+## ⚖️ Hinweis
+
+Dieses Projekt ist **inoffiziell** und steht in keiner Verbindung zu DSB Mobile / Heinekingmedia.

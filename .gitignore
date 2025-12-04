@@ -1,2 +1,14 @@
-# Ignoriere den Ordner server-build/dsb-database und alles darin
-server-build/dsb-database/
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Laufzeit-Dateien ignorieren
+dsb-database/
+logs/

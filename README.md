@@ -57,8 +57,13 @@ GIT_REPO=mein-plan-archiv
 DISCORD_WEBHOOK_WARN=https://discord.com/api/webhooks/...warn
 DISCORD_WEBHOOK_PLANS=https://discord.com/api/webhooks/...plans
 
-# --- Einstellungen ---
-TEMP_THRESHOLD=70
+# OPTIONAL: ID der Rolle, die bei Warnungen gepingt werden soll (z.B. 123456789012345678)
+DISCORD_PING_ROLE_ID=123456789012345678
+
+# Einstellungen
+
+# Temp-Warnung ab X Grad
+TEMP_THRESHOLD=64
 ```
 
 ---

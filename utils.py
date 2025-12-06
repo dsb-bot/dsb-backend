@@ -1,7 +1,6 @@
 import os
 import logging
 import datetime
-from logging.handlers import RotatingFileHandler
 from config import Config
 
 logger = logging.getLogger('DSBBot')
@@ -47,13 +46,3 @@ def get_cpu_temperature():
         return temp
     except Exception:
         return None
-
-def ConvertTeacherToStudent(teacher_html: str) -> list[str]:
-    """Dummy-Funktion zur Konvertierung eines Lehrerplans (HTML-String) in eine Liste von Schülerplänen (HTML-Strings).
-    
-    Diese Dummy-Implementierung gibt den übergebenen String einfach als Liste zurück,
-    damit die Bot-Logik getestet werden kann. In der finalen Version muss hier 
-    die Logik zur Filterung und Aufteilung des Lehrerplans implementiert werden.
-    """
-    # Gibt den kompletten HTML-String als einziges Element in einer Liste zurück.
-    return [teacher_html]

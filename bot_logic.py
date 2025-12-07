@@ -392,7 +392,7 @@ class SubstitutionBot:
             logger.info(f"Gesamt-Updates gefunden: {list(all_new_keys)}")
             # Sende Discord-Nachricht basierend auf allen neuen/aktualisierten Plänen
             self.discord.send_plan_update(all_current_plans, all_new_keys)
-            self.git.push_changes(message="Gesamtplan Update (Standard & Konvertiert)")
+            self.git.push_changes()
 
         if not updated:
             logger.debug("Keine neuen Gesamt-Updates gefunden.")

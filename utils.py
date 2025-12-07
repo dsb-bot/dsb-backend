@@ -25,13 +25,13 @@ def setup_logging():
 
     # Console Handler
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
     # Standard File Handler für neue Datei pro Start
     fh = logging.FileHandler(log_filename, encoding='utf-8')
-    fh.setLevel(logging.DEBUG) 
+    fh.setLevel(logging.INFO) 
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 

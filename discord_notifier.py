@@ -52,10 +52,7 @@ class DiscordNotifier:
         temp_str = f"{temp:.1f}°C" if temp else "?"
         
         # Füge den Rollen-Ping zur Hauptnachricht (content) hinzu, wenn neue Pläne gefunden wurden
-        content_message = ""
-        if new_keys and self.ping_role_id:
-            # Discord erwartet die Rolle im Format <@&ID>
-            content_message = f"🚨 NEUE VERTRETUNGSPLÄNE! <@&{self.ping_role_id}>"
+        content_message = "Neue Vertretungspläne verfügbar."
 
         data = {
             "username": "DSB-Bot",

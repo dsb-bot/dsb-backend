@@ -4,7 +4,7 @@ import uuid
 import base64
 import gzip
 import datetime as dt
-from utils import logger # Importiert den konfigurierten Logger
+from utils import logger
 
 class DSBClient:
     def __init__(self, username, password):
@@ -43,22 +43,15 @@ class DSBClient:
             params_compressed = base64.b64encode(gzip.compress(params_bytes)).decode("UTF-8")
             json_req = {"req": {"Data": params_compressed, "DataType": 1}}
             
-            logger.debug(f"DSB Request URL: {self.data_url}")
-            logger.debug(f"DSB Request Body (encrypted): {json_req}")
-            
             # --- POST-ANFRAGE SENDEN ---
             r = requests.post(self.data_url, json=json_req, timeout=15)
             r.raise_for_status()
             
             # --- ANTWORT VERARBEITEN ---
-            resp_content = r.content.decode('utf-8')
-            logger.debug(f"DSB Response Content (raw JSON): {resp_content}")
 
             resp_compressed = json.loads(r.content)["d"]
             # Daten Base64-dekodieren und dekomprimieren
             data = json.loads(gzip.decompress(base64.b64decode(resp_compressed)))
-            
-            logger.debug(f"DSB Response Content (decrypted JSON): {json.dumps(data, indent=2)}") 
             
             # --- PRÜFUNG DES API-STATUSCODES ---
             if data.get('Resultcode') != 0:

@@ -46,8 +46,6 @@ def ConvertTeacherToStudent(teacher_html: str) -> List[str]:
     
     plan_blocks = plan_block_pattern.findall(teacher_html)
     
-    logger.debug(f"ConvertTeacherToStudent: {len(plan_blocks)} Tages-Pläne gefunden")
-    
     # 4. Erstelle die neuen HTML-Strings
     student_plans: List[str] = []
     
@@ -59,7 +57,6 @@ def ConvertTeacherToStudent(teacher_html: str) -> List[str]:
         # Aufbau: template_header + Plan-Inhalt + template_footer
         new_plan = template_header + '\n' + block_content.strip() + template_footer
         student_plans.append(new_plan)
-        logger.debug(f"Plan geparst: {title_text}")
         
     transformed_plans = [_restructure_mon_list_table(plan) for plan in student_plans]
     return transformed_plans
@@ -88,10 +85,7 @@ def _restructure_mon_list_table(html_string: str) -> str:
         mon_list_table = soup.find('table', class_='mon_list')
 
         if not mon_list_table:
-            logger.info("_restructure_mon_list_table: Keine mon_list Tabelle gefunden — HTML unverändert zurückgegeben")
             return html_string
-
-        logger.info("_restructure_mon_list_table: mon_list Tabelle gefunden, beginne Umstrukturierung...")
 
         # Füge tbody hinzu, falls nicht vorhanden
         old_tbody = mon_list_table.find('tbody')
@@ -111,12 +105,10 @@ def _restructure_mon_list_table(html_string: str) -> str:
 
         # Filter: nur erlaubte Art
         data_rows = table_data[1:]  # Header ausschließen
-        logger.info(f"_restructure_mon_list_table: {len(data_rows)} Datenzeilen vor Filterung")
         data_rows = [
             row for row in data_rows
             if len(row) >= 8 and row[7] in ALLOWED_ART
         ]
-        logger.info(f"_restructure_mon_list_table: {len(data_rows)} Datenzeilen nach Art-Filter")
         # Zeilen müssen genügend Spalten für Mapping haben
         data_rows = [row for row in data_rows if len(row) >= max([2,1,0,5,3,4,3,7,8])+1]
 

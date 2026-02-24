@@ -209,7 +209,8 @@ class SubstitutionBot:
         converted_counter = 0
 
         # Berechne den Mindest-Werktag (zwei Arbeitstage von heute, also übermorgen oder später)
-        min_working_day = self._get_n_working_days_from_now(1)
+        # Früher wurde hier fälschlich 1 übergeben (nächster Werktag). Setze auf 2.
+        min_working_day = self._get_n_working_days_from_now(2)
         logger.debug(
             f"Konvertierung von Lehrerplänen nur für Pläne ab: {min_working_day.strftime('%d.%m.%Y')}"
         )
@@ -252,24 +253,29 @@ class SubstitutionBot:
                     for html_content in converted_html_plans:
                         plan_dt_obj = self._extract_plan_date(html_content)
 
-                        # Prüfe, ob der Plan frühstens vom übernächsten Werktag ist
-                        if plan_dt_obj is None or plan_dt_obj < min_working_day:
-                            date_display = (
-                                plan_dt_obj.strftime("%d.%m.%Y")
-                                if plan_dt_obj
-                                else "unbekanntes Datum"
-                            )
+                        # Zusätzliche Debug-Infos: Titel aus dem konvertierten HTML und Vergleichswerte
+                        soup = BeautifulSoup(html_content, "html.parser")
+                        mon_title_div = soup.find("div", class_="mon_title")
+                        title_text = mon_title_div.text.strip() if mon_title_div else "(kein Titel)"
+                        logger.debug(
+                            f"Konvertierter Plan gefunden: Titel='{title_text}', extrahiertes Datum={plan_dt_obj}, Mindestdatum={min_working_day.strftime('%d.%m.%Y')}"
+                        )
+
+                        # Prüfe, ob der Plan frühstens vom Mindest-Werktag ist
+                        if plan_dt_obj is None:
                             logger.debug(
-                                f"Konvertierter Plan ({date_display}) ignoriert, da er vor {min_working_day.strftime('%d.%m.%Y')} liegt."
+                                f"Konvertierter Plan ('{title_text}') wird ignoriert: kein Datum extrahierbar."
+                            )
+                            continue
+
+                        if plan_dt_obj < min_working_day:
+                            logger.debug(
+                                f"Konvertierter Plan ('{title_text}' - {plan_dt_obj.strftime('%d.%m.%Y')}) ignoriert, da er vor {min_working_day.strftime('%d.%m.%Y')} liegt."
                             )
                             continue
 
                         # Der Plan ist gültig und wird verarbeitet
                         converted_counter += 1
-
-                        # Temporäre Titel/Datumsextraktion nur für Zustand/Logs
-                        soup = BeautifulSoup(html_content, "html.parser")
-                        mon_title_div = soup.find("div", class_="mon_title")
 
                         # Generiere einen eindeutigen Schlüssel (beinhaltet Client-Name und Datum)
                         date_tag = plan_dt_obj.strftime("%Y%m%d")

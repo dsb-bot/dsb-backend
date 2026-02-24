@@ -10,5 +10,5 @@ __pycache__/
 Thumbs.db
 
 # Laufzeit-Dateien ignorieren
-dsb-database/
+DB/
 logs/

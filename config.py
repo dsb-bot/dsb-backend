@@ -22,7 +22,7 @@ class Config:
     TEMP_THRESHOLD = float(os.getenv("TEMP_THRESHOLD", 75))
     
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    REPO_DIR = os.path.join(BASE_DIR, "dsb-database")
+    REPO_DIR = os.path.join(BASE_DIR, "DB", GIT_REPO)
     PLANS_DIR = os.path.join(REPO_DIR, "plans")
     
     LOG_DIR = os.path.join(BASE_DIR, "logs")

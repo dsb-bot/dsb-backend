@@ -7,15 +7,14 @@ from utils import logger
 def ConvertTeacherToStudent(teacher_html: str) -> List[str]:
     """Konvertiert einen Lehrerplan (HTML-String) in eine Liste von Schülerplänen (HTML-Strings).
     
-    Lieste den Inhalt von 'plan_style.html', extrahiert den Inhalt aller 
-    <body>-Tags aus dem Eingabestring und fügt ihn mit dem Header und dem abschließenden 
-    '</html>'-Tag zu vollständigen HTML-Dokumenten zusammen.
+    Trennt den Plan nach `div class="mon_title"` Divs und erstellt für jeden Tagesplan
+    ein vollständiges HTML-Dokument mit Header und Footer.
     
     Args:
         teacher_html: Der komplette HTML-String des Lehrerplans.
 
     Returns:
-        Eine Liste von HTML-Strings, wobei jeder String ein vollständiger Schülerplan ist.
+        Eine Liste von HTML-Strings, wobei jeder String ein vollständiger Schülerplan für einen Tag ist.
     """
     
     # 1. Lese den Inhalt von 'plan_style.html' (muss im selben Verzeichnis liegen)
@@ -36,27 +35,32 @@ def ConvertTeacherToStudent(teacher_html: str) -> List[str]:
         return []
 
     # 2. Definiere den abschließenden Tag
-    # Wir fügen </body> hinzu, um wohlgeformtes HTML zu gewährleisten, da der Header mit <body> endet.
     template_footer = '\n\n</body>\n</html>'
     
-    # 3. Regulärer Ausdruck zur Extraktion des Inhalts zwischen <body> und </body> (nicht-gierig)
-    # re.DOTALL ist notwendig, damit '.' über Zeilenumbrüche hinweg matched.
-    body_content_pattern = re.compile(r'<body.*?>(.*?)</body>', re.IGNORECASE | re.DOTALL)
+    # 3. Trenne die HTML nach Tages-Plänen: von `<table class="mon_head">` bis zur nächsten
+    # oder zum Ende. Dies erfasst den kompletten Block mit Header, Titel und Daten.
+    plan_block_pattern = re.compile(
+        r'(<table class="mon_head">.*?<div class="mon_title">.*?</div>.*?)(?=<table class="mon_head">|$)', 
+        re.IGNORECASE | re.DOTALL
+    )
     
-    # Finde alle Übereinstimmungen und extrahiere den Inhalt
-    body_contents = body_content_pattern.findall(teacher_html)
+    plan_blocks = plan_block_pattern.findall(teacher_html)
+    
+    logger.debug(f"ConvertTeacherToStudent: {len(plan_blocks)} Tages-Pläne gefunden")
     
     # 4. Erstelle die neuen HTML-Strings
     student_plans: List[str] = []
     
-    for content in body_contents:
-        # Aufbau: template_header (enthält <body>) + extrahierter_Inhalt + template_footer (enthält </body></html>)
-        # Die trim-Operation stellt sicher, dass unnötige Whitespaces um den Inhalt entfernt werden.
-        new_plan = template_header + content.strip() + template_footer
-        student_plans.append(new_plan)
+    for block_content in plan_blocks:
+        # Extrahiere Datum aus dem Block für Debug-Logging
+        title_match = re.search(r'<div class="mon_title">(.*?)</div>', block_content, re.IGNORECASE | re.DOTALL)
+        title_text = title_match.group(1).strip() if title_match else "Kein Titel"
         
-    #return student_plans
-    
+        # Aufbau: template_header + Plan-Inhalt + template_footer
+        new_plan = template_header + '\n' + block_content.strip() + template_footer
+        student_plans.append(new_plan)
+        logger.debug(f"Plan geparst: {title_text}")
+        
     transformed_plans = [_restructure_mon_list_table(plan) for plan in student_plans]
     return transformed_plans
 
@@ -84,7 +88,10 @@ def _restructure_mon_list_table(html_string: str) -> str:
         mon_list_table = soup.find('table', class_='mon_list')
 
         if not mon_list_table:
+            logger.info("_restructure_mon_list_table: Keine mon_list Tabelle gefunden — HTML unverändert zurückgegeben")
             return html_string
+
+        logger.info("_restructure_mon_list_table: mon_list Tabelle gefunden, beginne Umstrukturierung...")
 
         # Füge tbody hinzu, falls nicht vorhanden
         old_tbody = mon_list_table.find('tbody')
@@ -104,10 +111,12 @@ def _restructure_mon_list_table(html_string: str) -> str:
 
         # Filter: nur erlaubte Art
         data_rows = table_data[1:]  # Header ausschließen
+        logger.info(f"_restructure_mon_list_table: {len(data_rows)} Datenzeilen vor Filterung")
         data_rows = [
             row for row in data_rows
             if len(row) >= 8 and row[7] in ALLOWED_ART
         ]
+        logger.info(f"_restructure_mon_list_table: {len(data_rows)} Datenzeilen nach Art-Filter")
         # Zeilen müssen genügend Spalten für Mapping haben
         data_rows = [row for row in data_rows if len(row) >= max([2,1,0,5,3,4,3,7,8])+1]
 
@@ -115,15 +124,15 @@ def _restructure_mon_list_table(html_string: str) -> str:
         def klassen_key(row):
             klasse = row[2].replace("(", "").replace(")", "").strip()
             if not klasse or klasse == "":
-                return (float('inf'), float('inf'), klasse)  # leere Klasse ans Ende
+                return (9999, "zzz", klasse)  # leere Klasse ans Ende
             if klasse in {"E1","E2","Q1","Q2","Q3","Q4","AG"}:
-                return (float('inf'), klasse, klasse)  # Sonderklassen ans Ende
+                return (9999, klasse, klasse)  # Sonderklassen ans Ende
             match = re.match(r"(\d+)?([a-zA-Z]*)", klasse)
             if match:
                 num_part = int(match.group(1)) if match.group(1) else 0
                 letter_part = match.group(2)
                 return (num_part, letter_part, klasse)
-            return (float('inf'), klasse, klasse)
+            return (9999, klasse, klasse)
 
         data_rows.sort(key=klassen_key)
 
@@ -173,4 +182,5 @@ def _restructure_mon_list_table(html_string: str) -> str:
         return str(soup)
 
     except Exception as e:
+        logger.error(f"_restructure_mon_list_table: EXCEPTION während Umstrukturierung: {e}", exc_info=True)
         return html_string

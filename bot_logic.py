@@ -209,7 +209,7 @@ class SubstitutionBot:
         converted_counter = 0
 
         # Berechne den Mindest-Werktag (zwei Arbeitstage von heute, also übermorgen oder später)
-        min_working_day = self._get_n_working_days_from_now(2)
+        min_working_day = self._get_n_working_days_from_now(1)
         logger.debug(
             f"Konvertierung von Lehrerplänen nur für Pläne ab: {min_working_day.strftime('%d.%m.%Y')}"
         )

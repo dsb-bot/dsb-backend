@@ -60,13 +60,6 @@ def ConvertTeacherToStudent(teacher_html: str) -> List[str]:
     transformed_plans = [_restructure_mon_list_table(plan) for plan in student_plans]
     return transformed_plans
 
-
-
-
-
-import re
-from bs4 import BeautifulSoup
-
 def _restructure_mon_list_table(html_string: str) -> str:
     NEW_HEADERS = ["Klasse(n)", "Stunde", "Vertreter", "(Lehrer)", "Fach", "Raum", "(Fach)", "Art", "Text"]
     SPECIAL_CLASSES = {"E1", "E2", "Q1", "Q2", "Q3", "Q4", "AG"}  # AG jetzt ans Ende
@@ -76,9 +69,14 @@ def _restructure_mon_list_table(html_string: str) -> str:
         "Lehrertausch",
         "Verlegung",
         "Unterricht geändert",
+        "Unterricht findet statt",
         "Sondereins.",
+        "Betreuung",
+        "Vtr. ohne Lehrer",
         "Raum-Vtr.",
-        "Tausch"
+        "Tausch",
+        "eigenverantwortliches Arbeiten",
+        "Teil-Vtr."
     }
 
     try:

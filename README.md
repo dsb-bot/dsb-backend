@@ -48,6 +48,10 @@ pip install -r requirements.txt
 DSB_USER=dein_login
 DSB_PASS=dein_passwort
 
+# --- DSB Lehrer Zugangsdaten --- (optional, leerlassen wenn nicht benötigt)
+DSB_TEACHER_USER=238701
+DSB_TEACHER_PASS=Leitbild
+
 # --- GitHub ---
 GIT_USER=DeinGitHubName
 GIT_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxx
@@ -57,10 +61,10 @@ GIT_REPO=mein-plan-archiv
 DISCORD_WEBHOOK_WARN=https://discord.com/api/webhooks/...warn
 DISCORD_WEBHOOK_PLANS=https://discord.com/api/webhooks/...plans
 
+# --- Einstellungen ---
+
 # OPTIONAL: ID der Rolle, die bei Warnungen gepingt werden soll (z.B. 123456789012345678)
 DISCORD_PING_ROLE_ID=123456789012345678
-
-# Einstellungen
 
 # Temp-Warnung ab X Grad
 TEMP_THRESHOLD=64

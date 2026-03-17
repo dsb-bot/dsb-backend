@@ -112,7 +112,7 @@ def _restructure_mon_list_table(html_string: str) -> str:
         # Zeilen müssen genügend Spalten für Mapping haben
         data_rows = [row for row in data_rows if len(row) >= max([2,1,0,5,3,4,3,7,8])+1]
 
-        # Sortieren nach Original-Klasse (Spalte 2)
+        # Sortieren nach Original-Klasse (Spalte 2) und dann nach Stunde (Spalte 1)
         def klassen_key(row):
             klasse = row[2].replace("(", "").replace(")", "").strip()
             if not klasse or klasse == "":
@@ -126,7 +126,14 @@ def _restructure_mon_list_table(html_string: str) -> str:
                 return (num_part, letter_part, klasse)
             return (9999, klasse, klasse)
 
-        data_rows.sort(key=klassen_key)
+        def stunden_key(row):
+            stunde = row[1].strip()
+            try:
+                return int(stunde)
+            except ValueError:
+                return 9999  # Nicht-numerische Stunden ans Ende
+
+        data_rows.sort(key=lambda row: (klassen_key(row), stunden_key(row)))
 
         # Neuen Table Body aufbauen
         new_tbody = soup.new_tag('tbody')
